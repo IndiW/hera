@@ -1,0 +1,31 @@
+{
+    "manifest_version": 2,
+    "name": "Hera",
+    "version": "1.0",
+  
+    "description": "Avoid avoidance",
+  
+    "icons": {
+      "48": "border-48.png"
+    },
+    "permissions": [
+        "activeTab",
+        "tabs"
+    ],
+    "browser_action": {
+        "default_icon": "border-48.png",
+        "default_popup": "index.html",
+        "default_title": "Hera"
+    },
+    "background": {
+    "scripts": ["scripts/background.js"]
+},
+  
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["scripts/hera.js"]
+      }
+    ]
+  }
+  
