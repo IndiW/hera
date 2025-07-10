@@ -6,6 +6,43 @@ const COOLDOWN_MINUTES = 5;
 console.log('hera')
 console.log(window.location.href)
 
+function showCooldownTimer(cooldownUntil) {
+  // Remove any existing cooldown timer
+  const existing = document.getElementById('hera-cooldown-timer');
+  if (existing) existing.remove();
+
+  const timerDiv = document.createElement('div');
+  timerDiv.id = 'hera-cooldown-timer';
+  timerDiv.style.position = 'fixed';
+  timerDiv.style.top = '20px';
+  timerDiv.style.right = '20px';
+  timerDiv.style.background = 'rgba(0,0,0,0.85)';
+  timerDiv.style.color = 'white';
+  timerDiv.style.padding = '12px 20px';
+  timerDiv.style.borderRadius = '10px';
+  timerDiv.style.fontSize = '20px';
+  timerDiv.style.fontWeight = 'bold';
+  timerDiv.style.zIndex = '10000';
+  timerDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+  document.body.appendChild(timerDiv);
+
+  function update() {
+    const now = Date.now();
+    const msLeft = cooldownUntil - now;
+    if (msLeft > 0) {
+      const secLeft = Math.floor(msLeft / 1000);
+      const min = Math.floor(secLeft / 60).toString().padStart(2, '0');
+      const sec = (secLeft % 60).toString().padStart(2, '0');
+      timerDiv.textContent = `Cooldown: ${min}:${sec}`;
+      timerDiv.style.display = 'block';
+      setTimeout(update, 1000);
+    } else {
+      timerDiv.remove();
+    }
+  }
+  update();
+}
+
 // Check cooldown
 const cooldownUntil = localStorage.getItem(COOLDOWN_KEY);
 if (cooldownUntil && Date.now() < parseInt(cooldownUntil, 10)) {
@@ -18,11 +55,14 @@ if (cooldownUntil && Date.now() < parseInt(cooldownUntil, 10)) {
       const min = Math.floor(secLeft / 60).toString().padStart(2, '0');
       const sec = (secLeft % 60).toString().padStart(2, '0');
       console.log(`Hera overlay is on cooldown. Time remaining: ${min}:${sec} | Ends at: ${new Date(end).toLocaleTimeString()}`);
+      setTimeout(logCooldown, 5000);
     } else {
       console.log('Hera overlay cooldown ended.');
     }
   }
   logCooldown();
+  // Show cooldown timer in top right
+  showCooldownTimer(end);
 } else {
   for (const domain of BLOCKED_DOMAINS) {
       if (window.location.href.includes(domain)) {
@@ -30,6 +70,150 @@ if (cooldownUntil && Date.now() < parseInt(cooldownUntil, 10)) {
         break;
       }
   }
+}
+
+function createMessageText(overlay) {
+  const messageDiv = document.createElement('div');
+  messageDiv.textContent = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+  messageDiv.style.fontSize = '4rem';
+  messageDiv.style.fontWeight = 'bold';
+  messageDiv.style.marginBottom = '10px';
+  overlay.appendChild(messageDiv);
+  return messageDiv;
+}
+
+function createInputField(overlay) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'Type your thoughts here...';
+  input.style.marginTop = '20px';
+  input.style.padding = '10px';
+  input.style.fontSize = '18px';
+  input.style.borderRadius = '6px';
+  input.style.border = '1px solid #ccc';
+  input.style.width = '80%';
+  input.style.maxWidth = '400px';
+  input.style.boxSizing = 'border-box';
+  overlay.appendChild(input);
+  return input;
+}
+
+function createEmojiRow(overlay, labelText, emojis, onSelect) {
+  const row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.flexDirection = 'row';
+  row.style.justifyContent = 'center';
+  row.style.alignItems = 'center';
+  row.style.marginTop = '20px';
+  row.style.gap = '10px';
+
+  const label = document.createElement('span');
+  label.textContent = labelText;
+  label.style.marginRight = '10px';
+  row.appendChild(label);
+
+  let selected = null;
+  emojis.forEach((item, idx) => {
+    const btn = document.createElement('button');
+    btn.textContent = item.emoji;
+    btn.style.fontSize = '28px';
+    btn.style.margin = '0 5px';
+    btn.style.background = 'none';
+    btn.style.border = '2px solid white';
+    btn.style.borderRadius = '8px';
+    btn.style.cursor = 'pointer';
+    btn.style.outline = 'none';
+    btn.setAttribute('aria-label', item.label);
+    btn.addEventListener('click', () => {
+      if (selected !== idx) {
+        selected = idx;
+        row.querySelectorAll('button').forEach(b => b.style.background = 'none');
+        btn.style.background = 'rgba(55,255,255,0.5)';
+        onSelect(idx, item.label);
+      }
+    });
+    row.appendChild(btn);
+  });
+  overlay.appendChild(row);
+  return {
+    getSelected: () => selected,
+    getSelectedLabel: () => selected !== null ? emojis[selected].label : 'None',
+  };
+}
+
+function createSubmitButton(overlay, getInput, getEnergy, getPleasant, onSubmit) {
+  const submitBtn = document.createElement('button');
+  submitBtn.textContent = 'Submit';
+  submitBtn.style.marginTop = '20px';
+  submitBtn.style.marginBottom = '20px';
+  submitBtn.style.padding = '0 24px';
+  submitBtn.style.fontSize = '18px';
+  submitBtn.style.borderRadius = '6px';
+  submitBtn.style.border = 'none';
+  submitBtn.style.background = '#2196f3';
+  submitBtn.style.color = 'white';
+  submitBtn.style.cursor = 'pointer';
+  submitBtn.style.fontWeight = 'bold';
+  submitBtn.disabled = false;
+  let submitted = false;
+  submitBtn.addEventListener('click', () => {
+    if (submitted) return;
+    submitted = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitted';
+    submitBtn.style.background = '#888';
+    submitBtn.style.cursor = 'not-allowed';
+    onSubmit(getInput(), getEnergy(), getPleasant());
+  });
+  overlay.appendChild(submitBtn);
+  return submitBtn;
+}
+
+function createTimer(overlay, timeLeft, onTimeUp, getEndTime) {
+  const timer = document.createElement('div');
+  timer.style.marginTop = '0px';
+  timer.style.fontSize = '32px';
+  let t = timeLeft;
+  const endTime = getEndTime();
+  timer.textContent = formatTimerText(t, endTime);
+  overlay.appendChild(timer);
+  return { timer, start: (procrastinateBtn, submitBtn) => {
+    const interval = setInterval(() => {
+      t--;
+      timer.textContent = formatTimerText(t, endTime);
+      if (t <= 0) {
+        clearInterval(interval);
+        procrastinateBtn.style.display = 'block';
+        timer.textContent = 'Time is up!';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Time Expired';
+          submitBtn.style.background = '#888';
+          submitBtn.style.cursor = 'not-allowed';
+        }
+        onTimeUp();
+      }
+    }, 1000);
+    return interval;
+  }};
+}
+
+function createProcrastinateButton(overlay, onProcrastinate) {
+  const procrastinateBtn = document.createElement('button');
+  procrastinateBtn.textContent = 'Procrastinate';
+  procrastinateBtn.style.marginTop = '20px';
+  procrastinateBtn.style.padding = '0 24px';
+  procrastinateBtn.style.fontSize = '18px';
+  procrastinateBtn.style.borderRadius = '6px';
+  procrastinateBtn.style.border = 'none';
+  procrastinateBtn.style.background = '#f44336';
+  procrastinateBtn.style.color = 'white';
+  procrastinateBtn.style.cursor = 'pointer';
+  procrastinateBtn.style.fontWeight = 'bold';
+  procrastinateBtn.style.display = 'none';
+  procrastinateBtn.addEventListener('click', onProcrastinate);
+  overlay.appendChild(procrastinateBtn);
+  return procrastinateBtn;
 }
 
 function addOverlay() {
@@ -52,12 +236,10 @@ function addOverlay() {
   const cooldownUntil = localStorage.getItem(COOLDOWN_KEY);
   const now = Date.now();
   if (cooldownUntil && now < parseInt(cooldownUntil, 10)) {
-    // Cooldown is active, show overlay with remaining time
     timeLeft = Math.ceil((parseInt(cooldownUntil, 10) - now) / 1000);
     console.log(`[hera] Cooldown active, overlay timer set to remaining: ${timeLeft} seconds`);
   } else {
-    // No cooldown, show full timer
-    timeLeft = 120; // 2 minutes in seconds
+    timeLeft = 120;
     console.log('[hera] No cooldown, overlay timer set to 2 minutes');
   }
 
@@ -79,146 +261,85 @@ function addOverlay() {
   overlay.style.display = 'flex';
   overlay.style.flexDirection = 'column';
 
-  const text = document.createTextNode(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
-  overlay.appendChild(text);
-
-  // Text input field
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'Type your thoughts here...';
-  input.style.marginTop = '20px';
-  input.style.padding = '10px';
-  input.style.fontSize = '18px';
-  input.style.borderRadius = '6px';
-  input.style.border = '1px solid #ccc';
-  input.style.width = '80%';
-  input.style.maxWidth = '400px';
-  input.style.boxSizing = 'border-box';
-  overlay.appendChild(input);
-
-  // Energy Level Row - todo refactor into own function
-  const energyRow = document.createElement('div');
-  energyRow.style.display = 'flex';
-  energyRow.style.flexDirection = 'row';
-  energyRow.style.justifyContent = 'center';
-  energyRow.style.alignItems = 'center';
-  energyRow.style.marginTop = '30px';
-  energyRow.style.gap = '10px';
-
-  const energyLabel = document.createElement('span');
-  energyLabel.textContent = 'Energy Level:';
-  energyLabel.style.marginRight = '10px';
-  energyRow.appendChild(energyLabel);
+  createMessageText(overlay);
+  const input = createInputField(overlay);
 
   const energyEmojis = [
     { label: 'Low', emoji: '😴' },
     { label: 'Medium', emoji: '😐' },
     { label: 'High', emoji: '⚡' }
   ];
-  let selectedEnergy = null;
-  energyEmojis.forEach((item, idx) => {
-    const btn = document.createElement('button');
-    btn.textContent = item.emoji;
-    btn.style.fontSize = '28px';
-    btn.style.margin = '0 5px';
-    btn.style.background = 'none';
-    btn.style.border = '2px solid white';
-    btn.style.borderRadius = '8px';
-    btn.style.cursor = 'pointer';
-    btn.style.outline = 'none';
-    btn.setAttribute('aria-label', item.label);
-    btn.addEventListener('click', () => {
-      if (selectedEnergy !== idx) {
-        selectedEnergy = idx;
-        // Deselect all
-        energyRow.querySelectorAll('button').forEach(b => b.style.background = 'none');
-        // Select this
-        btn.style.background = 'rgba(55,255,255,0.5)';
-        console.log('Energy Level:', item.label);
-      }
-    });
-    energyRow.appendChild(btn);
+  let energyLabel = 'None';
+  const energyRow = createEmojiRow(overlay, 'Energy Level:', energyEmojis, (idx, label) => {
+    energyLabel = label;
+    console.log('Energy Level:', label);
   });
-  overlay.appendChild(energyRow);
-
-  // Pleasantness Row
-  const pleasantRow = document.createElement('div');
-  pleasantRow.style.display = 'flex';
-  pleasantRow.style.flexDirection = 'row';
-  pleasantRow.style.justifyContent = 'center';
-  pleasantRow.style.alignItems = 'center';
-  pleasantRow.style.marginTop = '20px';
-  pleasantRow.style.gap = '10px';
-
-  const pleasantLabel = document.createElement('span');
-  pleasantLabel.textContent = 'Pleasantness:';
-  pleasantLabel.style.marginRight = '10px';
-  pleasantRow.appendChild(pleasantLabel);
 
   const pleasantEmojis = [
     { label: 'Low', emoji: '😞' },
     { label: 'Medium', emoji: '😐' },
     { label: 'High', emoji: '😊' }
   ];
-  let selectedPleasant = null;
-  pleasantEmojis.forEach((item, idx) => {
-    const btn = document.createElement('button');
-    btn.textContent = item.emoji;
-    btn.style.fontSize = '28px';
-    btn.style.margin = '0 5px';
-    btn.style.background = 'none';
-    btn.style.border = '2px solid white';
-    btn.style.borderRadius = '8px';
-    btn.style.cursor = 'pointer';
-    btn.style.outline = 'none';
-    btn.setAttribute('aria-label', item.label);
-    btn.addEventListener('click', () => {
-      if (selectedPleasant !== idx) {
-        selectedPleasant = idx;
-        // Deselect all
-        pleasantRow.querySelectorAll('button').forEach(b => b.style.background = 'none');
-        // Select this
-        btn.style.background = 'rgba(55,255,255,0.5)';
-        console.log('Pleasantness:', item.label);
-      }
-    });
-    pleasantRow.appendChild(btn);
+  let pleasantLabel = 'None';
+  const pleasantRow = createEmojiRow(overlay, 'Pleasantness:', pleasantEmojis, (idx, label) => {
+    pleasantLabel = label;
+    console.log('Pleasantness:', label);
   });
-  overlay.appendChild(pleasantRow);
 
-  // Timer
-  const timer = document.createElement('div');
-  timer.style.marginTop = '20px';
-  timer.style.fontSize = '32px';
-  const endTime = Date.now() + timeLeft * 1000;
-  timer.textContent = formatTimerText(timeLeft, endTime);
-  overlay.appendChild(timer);
-
-  document.body.appendChild(overlay);
-
-  const interval = setInterval(() => {
-    timeLeft--;
-    timer.textContent = formatTimerText(timeLeft, endTime);
-    if (timeLeft <= 0) {
-      console.log('time up, removing overlay');
-      clearInterval(interval);
-      // Log the input value, energy, pleasantness, and url
-      const energyValue = selectedEnergy !== null ? energyEmojis[selectedEnergy].label : 'None';
-      const pleasantValue = selectedPleasant !== null ? pleasantEmojis[selectedPleasant].label : 'None';
+  let interval;
+  const submitBtn = createSubmitButton(
+    overlay,
+    () => input.value,
+    () => energyLabel,
+    () => pleasantLabel,
+    (text, energy, pleasantness) => {
       const logEntry = {
-        text: input.value,
-        energy: energyValue,
-        pleasantness: pleasantValue,
+        text,
+        energy,
+        pleasantness,
         timestamp: Date.now(),
         url: window.location.href
       };
       saveLogEntry(logEntry);
-      // Set cooldown for 5 minutes
       const cooldownUntil = Date.now() + COOLDOWN_MINUTES * 60 * 1000;
       localStorage.setItem(COOLDOWN_KEY, cooldownUntil.toString());
-      overlay.remove();
     }
-  }, 1000);
+  );
+
+  const procrastinateBtn = createProcrastinateButton(overlay, () => {
+    const logEntry = {
+      text: input.value,
+      energy: energyLabel,
+      pleasantness: pleasantLabel,
+      timestamp: Date.now(),
+      url: window.location.href
+    };
+    saveLogEntry(logEntry);
+    const cooldownUntil = Date.now() + COOLDOWN_MINUTES * 60 * 1000;
+    localStorage.setItem(COOLDOWN_KEY, cooldownUntil.toString());
+    overlay.remove();
+    clearInterval(interval);
+    console.log('[hera] Procrastinate button clicked. Entry logged, overlay removed, and cooldown set.');
+  });
+
+  const timerObj = createTimer(
+    overlay,
+    timeLeft,
+    () => {
+      procrastinateBtn.style.display = 'block';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Time Expired';
+        submitBtn.style.background = '#888';
+        submitBtn.style.cursor = 'not-allowed';
+      }
+      console.log('[hera] Timer ended. Procrastinate button shown.');
+    },
+    () => Date.now() + timeLeft * 1000
+  );
+  interval = timerObj.start(procrastinateBtn, submitBtn);
+
+  document.body.appendChild(overlay);
 }
 
 function saveLogEntry(logEntry) {
