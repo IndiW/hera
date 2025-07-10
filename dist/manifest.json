@@ -1,5 +1,5 @@
 {
-    "manifest_version": 3,
+    "manifest_version": 2,
     "name": "Hera",
     "version": "1.0",
   
@@ -10,7 +10,8 @@
     },
     "permissions": [
         "activeTab",
-        "tabs"
+        "tabs",
+        "storage"
     ],
     "browser_action": {
         "default_icon": "border-48.png",
