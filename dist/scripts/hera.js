@@ -3,21 +3,6 @@ const MESSAGES = ['Why are you here?', 'Do you really want to do this?', 'What s
 const COOLDOWN_KEY = 'hera_cooldown_until';
 const COOLDOWN_MINUTES = 5;
 
-if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
-  browser.storage.local.set({ test: 'hello' }).then(() => {
-    console.log('Storage test succeeded');
-  }).catch(e => console.error('Storage test failed', e));
-} else {
-  console.log('No browser.storage.local available');
-}
-
-console.log('typeof browser:', typeof browser);
-   console.log('browser.storage:', browser && browser.storage);
-   console.log('browser.storage.local:', browser && browser.storage && browser.storage.local);
-   console.log('typeof chrome:', typeof chrome);
-   console.log('chrome.storage:', chrome && chrome.storage);
-   console.log('chrome.storage.local:', chrome && chrome.storage && chrome.storage.local);
-
 console.log('hera')
 console.log(window.location.href)
 
@@ -60,6 +45,20 @@ function addOverlay() {
     console.log('document.body not ready, retrying...');
     setTimeout(addOverlay, 100);
     return;
+  }
+
+  // Determine timer duration
+  let timeLeft;
+  const cooldownUntil = localStorage.getItem(COOLDOWN_KEY);
+  const now = Date.now();
+  if (cooldownUntil && now < parseInt(cooldownUntil, 10)) {
+    // Cooldown is active, show overlay with remaining time
+    timeLeft = Math.ceil((parseInt(cooldownUntil, 10) - now) / 1000);
+    console.log(`[hera] Cooldown active, overlay timer set to remaining: ${timeLeft} seconds`);
+  } else {
+    // No cooldown, show full timer
+    timeLeft = 120; // 2 minutes in seconds
+    console.log('[hera] No cooldown, overlay timer set to 2 minutes');
   }
 
   const overlay = document.createElement('div');
@@ -191,7 +190,6 @@ function addOverlay() {
   const timer = document.createElement('div');
   timer.style.marginTop = '20px';
   timer.style.fontSize = '32px';
-  let timeLeft = 120; // 2 minutes in seconds
   const endTime = Date.now() + timeLeft * 1000;
   timer.textContent = formatTimerText(timeLeft, endTime);
   overlay.appendChild(timer);

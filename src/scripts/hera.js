@@ -47,6 +47,20 @@ function addOverlay() {
     return;
   }
 
+  // Determine timer duration
+  let timeLeft;
+  const cooldownUntil = localStorage.getItem(COOLDOWN_KEY);
+  const now = Date.now();
+  if (cooldownUntil && now < parseInt(cooldownUntil, 10)) {
+    // Cooldown is active, show overlay with remaining time
+    timeLeft = Math.ceil((parseInt(cooldownUntil, 10) - now) / 1000);
+    console.log(`[hera] Cooldown active, overlay timer set to remaining: ${timeLeft} seconds`);
+  } else {
+    // No cooldown, show full timer
+    timeLeft = 120; // 2 minutes in seconds
+    console.log('[hera] No cooldown, overlay timer set to 2 minutes');
+  }
+
   const overlay = document.createElement('div');
   overlay.id = 'hera-block-overlay';
   overlay.style.position = 'fixed';
@@ -176,7 +190,6 @@ function addOverlay() {
   const timer = document.createElement('div');
   timer.style.marginTop = '20px';
   timer.style.fontSize = '32px';
-  let timeLeft = 120; // 2 minutes in seconds
   const endTime = Date.now() + timeLeft * 1000;
   timer.textContent = formatTimerText(timeLeft, endTime);
   overlay.appendChild(timer);
