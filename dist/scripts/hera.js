@@ -250,16 +250,57 @@ function addOverlay() {
   overlay.style.left = '0';
   overlay.style.width = '100%';
   overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 1)';
+  overlay.style.backgroundColor = 'rgba(251,251,251,0.98)'; // Acorn bg
   overlay.style.zIndex = '9999';
   overlay.style.justifyContent = 'center';
   overlay.style.alignItems = 'center';
-  overlay.style.color = 'white';
+  overlay.style.color = '#202124'; // Acorn text
   overlay.style.fontSize = '20px';
   overlay.style.fontWeight = 'bold';
   overlay.style.textAlign = 'center';
   overlay.style.display = 'flex';
   overlay.style.flexDirection = 'column';
+  overlay.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+  overlay.style.borderRadius = '12px';
+  overlay.style.boxShadow = '0 4px 32px rgba(0,0,0,0.18)';
+  overlay.style.border = '1.5px solid #e0e0e0';
+  overlay.style.padding = '32px 16px 24px 16px';
+
+  // Add Acorn/Photon style to all buttons and inputs created after this point
+  const origCreateElement = document.createElement.bind(document);
+  document.createElement = function(tag) {
+    const el = origCreateElement(tag);
+    if (tag === 'button') {
+      el.style.transition = 'background 0.2s, color 0.2s, border 0.2s';
+      el.style.fontFamily = overlay.style.fontFamily;
+      el.addEventListener('focus', () => {
+        el.style.outline = '2px solid #0060df';
+        el.style.outlineOffset = '2px';
+      });
+      el.addEventListener('blur', () => {
+        el.style.outline = 'none';
+      });
+      el.addEventListener('mouseover', () => {
+        if (!el.disabled) el.style.filter = 'brightness(0.95)';
+      });
+      el.addEventListener('mouseout', () => {
+        el.style.filter = '';
+      });
+    }
+    if (tag === 'input') {
+      el.style.fontFamily = overlay.style.fontFamily;
+      el.style.transition = 'border 0.2s, box-shadow 0.2s';
+      el.addEventListener('focus', () => {
+        el.style.border = '2px solid #0060df';
+        el.style.boxShadow = '0 0 0 2px #b5d3fa';
+      });
+      el.addEventListener('blur', () => {
+        el.style.border = '1px solid #ccc';
+        el.style.boxShadow = 'none';
+      });
+    }
+    return el;
+  };
 
   createMessageText(overlay);
   const input = createInputField(overlay);
@@ -340,6 +381,8 @@ function addOverlay() {
   interval = timerObj.start(procrastinateBtn, submitBtn);
 
   document.body.appendChild(overlay);
+  // Restore document.createElement to original after overlay is created
+  document.createElement = origCreateElement;
 }
 
 function saveLogEntry(logEntry) {

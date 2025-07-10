@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+
+const ACORN_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+const ACORN_BLUE = '#0060df';
+const ACORN_BG = '#fbfbfb';
+const ACORN_TEXT = '#202124';
+const ACORN_BORDER = '#e0e0e0';
 
 function App() {
   const [heraLog, setHeraLog] = useState([])
@@ -53,41 +57,89 @@ function App() {
   }
 
   return (
-    <>
-      <h1>Hera Log</h1>
+    <div
+      style={{
+        fontFamily: ACORN_FONT,
+        background: ACORN_BG,
+        color: ACORN_TEXT,
+        minHeight: '100vh',
+        padding: '24px',
+        borderRadius: '12px',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.12)',
+        border: `1.5px solid ${ACORN_BORDER}`,
+        maxWidth: 700,
+        margin: '0 auto',
+      }}
+    >
+      <h1 style={{ color: ACORN_BLUE, fontWeight: 700, fontSize: '2rem', marginBottom: 8 }}>Hera Log</h1>
       <div style={{ marginTop: 30 }}>
-        <h2>Overlay Responses</h2>
-        <button onClick={exportCSV} style={{ marginBottom: 10, padding: '6px 16px', fontSize: 14, borderRadius: 6, border: '1px solid #888', cursor: 'pointer' }}>
+        <h2 style={{ color: ACORN_TEXT, fontWeight: 600, fontSize: '1.2rem', marginBottom: 12 }}>Overlay Responses</h2>
+        <button
+          onClick={exportCSV}
+          style={{
+            marginBottom: 16,
+            padding: '8px 20px',
+            fontSize: 15,
+            borderRadius: 6,
+            border: `1.5px solid ${ACORN_BLUE}`,
+            background: ACORN_BLUE,
+            color: 'white',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'background 0.2s, color 0.2s, border 0.2s',
+            outline: 'none',
+          }}
+          onMouseOver={e => (e.currentTarget.style.background = '#0053ba')}
+          onMouseOut={e => (e.currentTarget.style.background = ACORN_BLUE)}
+          onFocus={e => (e.currentTarget.style.outline = `2px solid ${ACORN_BLUE}`)}
+          onBlur={e => (e.currentTarget.style.outline = 'none')}
+        >
           Export as CSV
         </button>
         {heraLog.length === 0 ? (
-          <p>No entries yet.</p>
+          <p style={{ color: '#888', fontStyle: 'italic' }}>No entries yet.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '15px',
+              background: 'white',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            }}
+          >
             <thead>
-              <tr>
-                <th style={{ border: '1px solid #ccc', padding: '4px' }}>Date/Time</th>
-                <th style={{ border: '1px solid #ccc', padding: '4px' }}>Text</th>
-                <th style={{ border: '1px solid #ccc', padding: '4px' }}>Energy</th>
-                <th style={{ border: '1px solid #ccc', padding: '4px' }}>Pleasantness</th>
-                <th style={{ border: '1px solid #ccc', padding: '4px' }}>URL</th>
+              <tr style={{ background: '#f4f7fb' }}>
+                <th style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', color: ACORN_BLUE, fontWeight: 700 }}>Date/Time</th>
+                <th style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', color: ACORN_BLUE, fontWeight: 700 }}>Text</th>
+                <th style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', color: ACORN_BLUE, fontWeight: 700 }}>Energy</th>
+                <th style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', color: ACORN_BLUE, fontWeight: 700 }}>Pleasantness</th>
+                <th style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', color: ACORN_BLUE, fontWeight: 700 }}>URL</th>
               </tr>
             </thead>
             <tbody>
               {heraLog.map((entry, idx) => (
-                <tr key={idx}>
-                  <td style={{ border: '1px solid #ccc', padding: '4px' }}>{formatDate(entry.timestamp)}</td>
-                  <td style={{ border: '1px solid #ccc', padding: '4px' }}>{entry.text}</td>
-                  <td style={{ border: '1px solid #ccc', padding: '4px' }}>{entry.energy}</td>
-                  <td style={{ border: '1px solid #ccc', padding: '4px' }}>{entry.pleasantness}</td>
-                  <td style={{ border: '1px solid #ccc', padding: '4px', wordBreak: 'break-all' }}>{entry.url}</td>
+                <tr
+                  key={idx}
+                  style={{
+                    background: idx % 2 === 0 ? '#f9fafb' : 'white',
+                    borderBottom: `1px solid ${ACORN_BORDER}`,
+                  }}
+                >
+                  <td style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', wordBreak: 'break-word' }}>{formatDate(entry.timestamp)}</td>
+                  <td style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', wordBreak: 'break-word' }}>{entry.text}</td>
+                  <td style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', wordBreak: 'break-word' }}>{entry.energy}</td>
+                  <td style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', wordBreak: 'break-word' }}>{entry.pleasantness}</td>
+                  <td style={{ border: `1.5px solid ${ACORN_BORDER}`, padding: '8px', wordBreak: 'break-all' }}>{entry.url}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
-    </>
+    </div>
   )
 }
 
